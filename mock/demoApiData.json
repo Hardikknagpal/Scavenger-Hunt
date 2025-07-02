@@ -1,0 +1,97 @@
+{
+  "info": {
+    "name": "Scavenger Hunt API",
+    "description": "Mock API for scavenger hunt questions and answers",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Question",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{url}}/endpoint243252",
+          "host": ["{{url}}"],
+          "path": ["endpoint243252"]
+        }
+      },
+      "response": [
+        {
+          "name": "Question Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/endpoint243252",
+              "host": ["{{url}}"],
+              "path": ["endpoint243252"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"img_src\": \"file.jpg\",\n  \"ageGroup\": [\"3-5\", \"5-7\", \"7-9\", \"9-11\"],\n  \"question\": \"What colour is the sky?\",\n  \"responseType\": \"multipleChoice\",\n  \"choices\": [\"blue\", \"green\", \"red\"],\n  \"hint\": \"Look up on a clear day!\",\n  \"answer\": [\"blue\"],\n  \"pointsRewarded\": [10, 5, 2],\n  \"coordinates\": \"40.7128,-74.0060\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Submit Answer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"answer\": \"blue\"\n}"
+        },
+        "url": {
+          "raw": "{{url}}/endpoint243252",
+          "host": ["{{url}}"],
+          "path": ["endpoint243252"]
+        }
+      },
+      "response": [
+        {
+          "name": "Correct Answer Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answer\": \"blue\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/endpoint243252",
+              "host": ["{{url}}"],
+              "path": ["endpoint243252"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"isCorrect\": true,\n  \"coordinates\": \"40.7128,-74.0060\"\n}"
+        }
+      ]
+    }
+  ]
+}

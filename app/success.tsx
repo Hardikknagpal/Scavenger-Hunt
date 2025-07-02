@@ -1,4 +1,3 @@
-import { useGame } from '@/app/context/GameContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -22,11 +21,19 @@ import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { Card } from '../components/ui/Card';
 import { GradientBackground } from '../components/ui/GradientBackground';
 import { CONFIG } from '../constants/config';
+import { useGame } from './context/GameContext';
 
 const { width } = Dimensions.get('window');
 
 export default function SuccessScreen() {
-  const { currentQuestion, score, level, setSelectedAnswer, setCurrentQuestion } = useGame();
+  const { 
+    currentQuestion, 
+    score, 
+    level, 
+    setSelectedAnswer, 
+    setCurrentQuestion,
+    lastResponse 
+  } = useGame();
   const [isNavigating, setIsNavigating] = useState(false);
 
   // Animation values
@@ -69,26 +76,54 @@ export default function SuccessScreen() {
     setIsNavigating(true);
 
     try {
-      // Mock coordinates - in real app, this would come from the API response
-      const mockCoordinates = "40.7128,-74.0060"; // New York coordinates
+      // Get coordinates from API response
+      const coordinates = lastResponse?.coordinates;
       
-      if (mockCoordinates) {
-        const url = `https://www.google.com/maps/search/?api=1&query=${mockCoordinates}`;
-        
-        const canOpen = await Linking.canOpenURL(url);
-        if (canOpen) {
-          await Linking.openURL(url);
-        } else {
-          Alert.alert('Error', 'Cannot open Google Maps');
-        }
+      if (!coordinates) {
+        Alert.alert('No Location', 'No next location coordinates provided.');
+        setIsNavigating(false);
+        return;
       }
+
+      console.log('Opening coordinates:', coordinates);
+      console.log('Location name:', lastResponse?.locationName);
       
-      // Reset game state and navigate back to home
-      setTimeout(() => {
-        setSelectedAnswer('');
-        setCurrentQuestion(null);
-        router.push('/');
-      }, 1000);
+      // Create Google Maps URL with coordinates
+      const url = `https://www.google.com/maps/search/?api=1&query=${coordinates}`;
+      
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+        
+        // Show next clue if available
+        if (lastResponse?.nextClue) {
+          setTimeout(() => {
+            Alert.alert(
+              'Next Clue!',
+              lastResponse.nextClue,
+              [
+                {
+                  text: 'Got it!',
+                  onPress: () => {
+                    setSelectedAnswer('');
+                    setCurrentQuestion(null);
+                    router.push('/');
+                  },
+                },
+              ]
+            );
+          }, 1000);
+        } else {
+          // Navigate back to home after a delay
+          setTimeout(() => {
+            setSelectedAnswer('');
+            setCurrentQuestion(null);
+            router.push('/');
+          }, 1500);
+        }
+      } else {
+        Alert.alert('Error', 'Cannot open Google Maps');
+      }
       
     } catch (error) {
       console.error('Error opening maps:', error);
@@ -103,6 +138,9 @@ export default function SuccessScreen() {
     setCurrentQuestion(null);
     router.push('/');
   };
+
+  // Get points from API response or fallback to question data
+  const pointsEarned = lastResponse?.pointsAwarded || currentQuestion?.pointsRewarded[0] || 0;
 
   return (
     <GradientBackground>
@@ -142,9 +180,29 @@ export default function SuccessScreen() {
               <View style={styles.pointsContainer}>
                 <Ionicons name="star" size={24} color={CONFIG.COLORS.accent} />
                 <Text style={styles.pointsText}>
-                  +{currentQuestion?.pointsRewarded[0] || 0} Points
+                  +{pointsEarned} Points
                 </Text>
               </View>
+
+              {/* Next Location Info */}
+              {lastResponse?.locationName && (
+                <View style={styles.locationContainer}>
+                  <Ionicons name="location" size={20} color={CONFIG.COLORS.primary} />
+                  <Text style={styles.locationText}>
+                    Next: {lastResponse.locationName}
+                  </Text>
+                </View>
+              )}
+
+              {/* Next Clue Preview */}
+              {lastResponse?.nextClue && (
+                <View style={styles.clueContainer}>
+                  <Ionicons name="eye" size={16} color={CONFIG.COLORS.gray} />
+                  <Text style={styles.clueText}>
+                    "{lastResponse.nextClue}"
+                  </Text>
+                </View>
+              )}
 
               {/* Current Stats */}
               <View style={styles.statsContainer}>
@@ -161,14 +219,24 @@ export default function SuccessScreen() {
 
               {/* Action Buttons */}
               <View style={styles.buttonContainer}>
-                <AnimatedButton
-                  title={isNavigating ? 'Opening Maps...' : 'Next Location'}
-                  icon="map"
-                  onPress={handleNextLocation}
-                  variant="primary"
-                  disabled={isNavigating}
-                  style={styles.primaryButton}
-                />
+                {lastResponse?.coordinates ? (
+                  <AnimatedButton
+                    title={isNavigating ? 'Opening Maps...' : 'Go to Next Location'}
+                    icon="map"
+                    onPress={handleNextLocation}
+                    variant="primary"
+                    disabled={isNavigating}
+                    style={styles.primaryButton}
+                  />
+                ) : (
+                  <AnimatedButton
+                    title="Continue Playing"
+                    icon="play"
+                    onPress={handlePlayAgain}
+                    variant="primary"
+                    style={styles.primaryButton}
+                  />
+                )}
                 
                 <AnimatedButton
                   title="Play Again"
@@ -241,7 +309,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
-    marginBottom: 30,
+    marginBottom: 20,
     gap: 8,
   },
   pointsText: {
@@ -249,10 +317,42 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#F57F17',
   },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginBottom: 15,
+    gap: 8,
+  },
+  locationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: CONFIG.COLORS.primary,
+  },
+  clueContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 15,
+    marginBottom: 25,
+    gap: 8,
+  },
+  clueText: {
+    flex: 1,
+    fontSize: 13,
+    color: CONFIG.COLORS.gray,
+    fontStyle: 'italic',
+    lineHeight: 18,
+  },
   statsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
     backgroundColor: '#F5F5F5',
     borderRadius: 20,
     paddingVertical: 20,

@@ -1,7 +1,6 @@
-import { useGame } from "@/app/context/GameContext";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
 import {
     Alert,
     SafeAreaView,
@@ -10,11 +9,13 @@ import {
     Text,
     TouchableOpacity,
     View,
-} from "react-native";
-import { AnimatedButton } from "../components/ui/AnimatedButton";
-import { Card } from "../components/ui/Card";
-import { GradientBackground } from "../components/ui/GradientBackground";
-import { CONFIG } from "../constants/config";
+} from 'react-native';
+import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { Card } from '../components/ui/Card';
+import { GradientBackground } from '../components/ui/GradientBackground';
+import { CONFIG } from '../constants/config';
+import type { SubmitAnswerResponse } from './context/GameContext';
+import { useGame } from './context/GameContext';
 
 export default function QuestionScreen() {
   const {
@@ -24,6 +25,7 @@ export default function QuestionScreen() {
     scannedEndpoint,
     addScore,
     nextLevel,
+    setLastResponse,
   } = useGame();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,11 +40,13 @@ export default function QuestionScreen() {
 
     try {
       const fullUrl = `${CONFIG.BASE_URL}/${scannedEndpoint}`;
-
+      console.log('Submitting answer to:', fullUrl);
+      console.log('Answer:', selectedAnswer);
+      
       const response = await fetch(fullUrl, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           answer: selectedAnswer,
@@ -53,19 +57,24 @@ export default function QuestionScreen() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
+      const result: SubmitAnswerResponse = await response.json();
+      console.log('API Response:', result);
+      
+      // Store the response for use in success screen
+      setLastResponse(result);
       const isCorrect = currentQuestion.Answer.includes(selectedAnswer);
 
-      if (isCorrect) {
-        addScore(currentQuestion.pointsRewarded[0]);
-        nextLevel();
-        router.push("/success");
-      } else {
-        Alert.alert("Incorrect Answer", "Try again!");
-      }
+      
+     if (isCorrect) {
+  addScore(currentQuestion.pointsRewarded[0]);
+  nextLevel();
+  router.push('/success');
+} else {
+  Alert.alert('Incorrect Answer', 'Try again!');
+}
     } catch (error) {
-      console.error("Error submitting answer:", error);
-      Alert.alert("Error", "Failed to submit answer. Please try again.");
+      console.error('Error submitting answer:', error);
+      Alert.alert('Error', 'Failed to submit answer. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -96,10 +105,7 @@ export default function QuestionScreen() {
   return (
     <GradientBackground>
       <SafeAreaView style={styles.container}>
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
@@ -112,19 +118,18 @@ export default function QuestionScreen() {
           {/* Question Card */}
           <Card style={styles.questionCard}>
             {/* Age Group Badge */}
-            {currentQuestion["Age group"] &&
-              currentQuestion["Age group"].length > 0 && (
-                <View style={styles.ageGroupContainer}>
-                  <Text style={styles.ageGroupLabel}>Age Group:</Text>
-                  <View style={styles.ageGroupBadges}>
-                    {currentQuestion["Age group"].map((age, index) => (
-                      <View key={index} style={styles.ageGroupBadge}>
-                        <Text style={styles.ageGroupText}>{age}</Text>
-                      </View>
-                    ))}
-                  </View>
+            {currentQuestion['Age group'] && currentQuestion['Age group'].length > 0 && (
+              <View style={styles.ageGroupContainer}>
+                <Text style={styles.ageGroupLabel}>Age Group:</Text>
+                <View style={styles.ageGroupBadges}>
+                  {currentQuestion['Age group'].map((age, index) => (
+                    <View key={index} style={styles.ageGroupBadge}>
+                      <Text style={styles.ageGroupText}>{age}</Text>
+                    </View>
+                  ))}
                 </View>
-              )}
+              </View>
+            )}
 
             {/* Question */}
             <Text style={styles.questionText}>{currentQuestion.question}</Text>
@@ -150,28 +155,21 @@ export default function QuestionScreen() {
                   disabled={isSubmitting}
                 >
                   <View style={styles.choiceContent}>
-                    <View
-                      style={[
-                        styles.choiceIndicator,
-                        selectedAnswer === choice && styles.selectedIndicator,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.choiceIndex,
-                          selectedAnswer === choice &&
-                            styles.selectedChoiceIndex,
-                        ]}
-                      >
+                    <View style={[
+                      styles.choiceIndicator,
+                      selectedAnswer === choice && styles.selectedIndicator,
+                    ]}>
+                      <Text style={[
+                        styles.choiceIndex,
+                        selectedAnswer === choice && styles.selectedChoiceIndex,
+                      ]}>
                         {String.fromCharCode(65 + index)}
                       </Text>
                     </View>
-                    <Text
-                      style={[
-                        styles.choiceText,
-                        selectedAnswer === choice && styles.selectedChoiceText,
-                      ]}
-                    >
+                    <Text style={[
+                      styles.choiceText,
+                      selectedAnswer === choice && styles.selectedChoiceText,
+                    ]}>
                       {choice}
                     </Text>
                   </View>
@@ -183,14 +181,13 @@ export default function QuestionScreen() {
             <View style={styles.pointsContainer}>
               <Ionicons name="star" size={16} color={CONFIG.COLORS.accent} />
               <Text style={styles.pointsText}>
-                Earn {currentQuestion.pointsRewarded[0]} points for correct
-                answer!
+                Earn {currentQuestion.pointsRewarded[0]} points for correct answer!
               </Text>
             </View>
 
             {/* Submit Button */}
             <AnimatedButton
-              title={isSubmitting ? "Submitting..." : "Submit Answer"}
+              title={isSubmitting ? 'Submitting...' : 'Submit Answer'}
               onPress={handleSubmitAnswer}
               variant="success"
               disabled={!selectedAnswer || isSubmitting}
@@ -212,21 +209,21 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 20,
     marginTop: 10,
   },
   backButton: {
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 25,
     padding: 12,
   },
   headerTitle: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 20,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   placeholder: {
     width: 49,
@@ -241,11 +238,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: CONFIG.COLORS.gray,
     marginBottom: 8,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   ageGroupBadges: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   ageGroupBadge: {
@@ -255,21 +252,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   ageGroupText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   questionText: {
     fontSize: 22,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: 'bold',
+    color: '#333',
     marginBottom: 20,
     lineHeight: 30,
   },
   hintContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "#FFF8E1",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFF8E1',
     padding: 12,
     borderRadius: 12,
     marginBottom: 25,
@@ -278,8 +275,8 @@ const styles = StyleSheet.create({
   hintText: {
     flex: 1,
     fontSize: 14,
-    color: "#F57C00",
-    fontStyle: "italic",
+    color: '#F57C00',
+    fontStyle: 'italic',
     lineHeight: 20,
   },
   choicesContainer: {
@@ -288,35 +285,35 @@ const styles = StyleSheet.create({
   },
   choiceButton: {
     borderWidth: 2,
-    borderColor: "#E0E0E0",
+    borderColor: '#E0E0E0',
     borderRadius: 16,
     padding: 16,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: '#FAFAFA',
   },
   selectedChoice: {
     borderColor: CONFIG.COLORS.primary,
     backgroundColor: CONFIG.COLORS.primary,
   },
   choiceContent: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
   choiceIndicator: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#E0E0E0",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   selectedIndicator: {
-    backgroundColor: "#FFF",
+    backgroundColor: '#FFF',
   },
   choiceIndex: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#666",
+    fontWeight: 'bold',
+    color: '#666',
   },
   selectedChoiceIndex: {
     color: CONFIG.COLORS.primary,
@@ -324,39 +321,39 @@ const styles = StyleSheet.create({
   choiceText: {
     flex: 1,
     fontSize: 16,
-    color: "#333",
-    fontWeight: "500",
+    color: '#333',
+    fontWeight: '500',
   },
   selectedChoiceText: {
-    color: "#FFF",
+    color: '#FFF',
   },
   pointsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
     marginBottom: 25,
     padding: 12,
-    backgroundColor: "#FFF9C4",
+    backgroundColor: '#FFF9C4',
     borderRadius: 12,
   },
   pointsText: {
     fontSize: 14,
-    color: "#F57F17",
-    fontWeight: "600",
+    color: '#F57F17',
+    fontWeight: '600',
   },
   submitButton: {
     marginTop: 10,
   },
   errorContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     gap: 20,
   },
   errorText: {
     fontSize: 18,
-    color: "#FFF",
-    textAlign: "center",
+    color: '#FFF',
+    textAlign: 'center',
   },
 });

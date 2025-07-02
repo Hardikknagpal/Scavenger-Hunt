@@ -11,17 +11,29 @@ interface Question {
   pointsRewarded: number[];
 }
 
+interface SubmitAnswerResponse {
+  isCorrect: boolean;
+  coordinates?: string;
+  locationName?: string;
+  nextClue?: string;
+  pointsAwarded?: number;
+  message?: string;
+  hintsRemaining?: number;
+}
+
 interface GameContextType {
   score: number;
   level: number;
   currentQuestion: Question | null;
   selectedAnswer: string;
   scannedEndpoint: string;
+  lastResponse: SubmitAnswerResponse | null;
   setScore: (score: number) => void;
   setLevel: (level: number) => void;
   setCurrentQuestion: (question: Question | null) => void;
   setSelectedAnswer: (answer: string) => void;
   setScannedEndpoint: (endpoint: string) => void;
+  setLastResponse: (response: SubmitAnswerResponse | null) => void;
   addScore: (points: number) => void;
   nextLevel: () => void;
   resetGame: () => void;
@@ -35,6 +47,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [scannedEndpoint, setScannedEndpoint] = useState('');
+  const [lastResponse, setLastResponse] = useState<SubmitAnswerResponse | null>(null);
 
   const addScore = (points: number) => {
     setScore(prev => prev + points);
@@ -50,6 +63,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setCurrentQuestion(null);
     setSelectedAnswer('');
     setScannedEndpoint('');
+    setLastResponse(null);
   };
 
   return (
@@ -60,11 +74,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
         currentQuestion,
         selectedAnswer,
         scannedEndpoint,
+        lastResponse,
         setScore,
         setLevel,
         setCurrentQuestion,
         setSelectedAnswer,
         setScannedEndpoint,
+        setLastResponse,
         addScore,
         nextLevel,
         resetGame,
@@ -82,3 +98,5 @@ export function useGame() {
   }
   return context;
 }
+
+export type { Question, SubmitAnswerResponse };

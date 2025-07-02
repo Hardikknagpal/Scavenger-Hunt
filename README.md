@@ -50,7 +50,7 @@ This is a React Native app built with **Expo (Managed Workflow)** that simulates
 - Mock backend powered by Postman Mock Server
 
 
-🧪 Mock API Setup
+## 🧪 Mock API Setup
 The mock API used in this project is defined using Postman.
 
 📁 Located at: /mock/demoApiData.json

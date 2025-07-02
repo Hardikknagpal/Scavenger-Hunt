@@ -35,16 +35,31 @@ npm run reset-project
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
+# Scavenger Hunt Demo App 🗺️
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+This is a React Native app built with **Expo (Managed Workflow)** that simulates a scavenger hunt using questions and answers from a mock Postman API.
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## 🚀 Features
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Scan QR code to fetch a question
+- Answer multiple-choice questions
+- Show coordinates on correct answer (Google Maps)
+- Mock backend powered by Postman Mock Server
+
+
+🧪 Mock API Setup
+The mock API used in this project is defined using Postman.
+
+📁 Located at: /mock/demoApiData.json
+Steps to use:
+
+Open Postman
+
+Import the JSON file from mock/demoApiData.json
+
+Create a Mock Server from the imported collection
+
+Replace all {{url}} values with your Mock Server's base URL
